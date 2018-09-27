@@ -66,6 +66,7 @@ module.exports = function(babel) {
         }
 
         const t = babel.types;
+        const opts = state.opts;
 
         // If the require() argument is not a string literal, replace the
         // require() call with an exception being thrown.

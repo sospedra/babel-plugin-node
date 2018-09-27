@@ -1,19 +1,29 @@
 {
   "name": "babel-plugin-node",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/sospedra/babel-plugin-node.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/sospedra/babel-plugin-node/issues"
-  },
-  "homepage": "https://github.com/sospedra/babel-plugin-node#readme"
+  "description": "Babel plugin for node",
+  "repository": "https://github.com/sospedra/babel-plugin-node",
+  "license": "MIT",
+  "author": "Christian Martinez, Ruben Sospedra",
+  "contributors": [
+    {
+      "name": "Christian Martinez",
+      "email": "chmartinez35@gmail.com"
+    },
+    {
+      "name": "Ruben Sospedra",
+      "email": "hello@sospedra.me"
+    }
+  ],
+  "keywords": [
+    "babel",
+    "plugin",
+    "babel-plugin",
+    "module",
+    "alias",
+    "require",
+    "import",
+    "node",
+    "react-native"
+  ]
 }

@@ -3,12 +3,6 @@
 const fs = require('fs');
 const path = require('path');
 
-function throwNewError(t, message) {
-  return t.throwStatement(
-    t.newExpression(t.identifier('Error'), [t.stringLiteral(message)])
-  );
-}
-
 const aliases = {
     constants: 'constants-browserify',
     crypto: 'crypto-browserify',
@@ -35,9 +29,32 @@ const aliases = {
     zlib: 'browserify-zlib',
 }
 
+const throwNewError = function (t, message) {
+  return t.throwStatement(
+    t.newExpression(t.identifier('Error'), [t.stringLiteral(message)])
+  );
+}
+
+const pushGlobalAssign = function(t, nodePath, globalName) {
+  nodePath.pushContainer('body', t.expressionStatement(
+    t.assignmentExpression('=',
+      t.memberExpression(
+        t.identifier('global'),
+        t.identifier(globalName)
+      ),
+      t.identifier(globalName)
+    )
+  ));
+}
+
 module.exports = function(babel) {
   return {
     visitor: {
+      Program: function Program(path, state) {
+          pushGlobalAssign(babel.types, path, 'Buffer')
+          pushGlobalAssign(babel.types, path, 'process')
+      }
+
       ImportDeclaration: function(nodePath, state) {
         const node = nodePath.node;
         const arg = node.source;

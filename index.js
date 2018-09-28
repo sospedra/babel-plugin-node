@@ -1,41 +1,41 @@
-'use strict';
+'use strict'
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('fs')
+const path = require('path')
 
 const aliases = {
-    constants: 'constants-browserify',
-    crypto: 'crypto-browserify',
-    dns: 'node-libs-browser/mock/dns',
-    domain: 'domain-browser',
-    fs: 'node-libs-browser/mock/empty',
-    http: 'stream-http',
-    https: 'https-browserify',
-    net: 'node-libs-browser/mock/net',
-    os: 'os-browserify/browser',
-    path: 'path-browserify',
-    querystring: 'querystring-es3',
-    stream: 'stream-browserify',
-    _stream_duplex: 'readable-stream/duplex',
-    _stream_passthrough: 'readable-stream/passthrough',
-    _stream_readable: 'readable-stream/readable',
-    _stream_transform: 'readable-stream/transform',
-    _stream_writable: 'readable-stream/writable',
-    sys: 'util',
-    timers: 'timers-browserify',
-    tls: 'node-libs-browser/mock/tls',
-    tty: 'tty-browserify',
-    vm: 'vm-browserify',
-    zlib: 'browserify-zlib',
+  constants: 'constants-browserify',
+  crypto: 'crypto-browserify',
+  dns: 'node-libs-browser/mock/dns',
+  domain: 'domain-browser',
+  fs: 'node-libs-browser/mock/empty',
+  http: 'stream-http',
+  https: 'https-browserify',
+  net: 'node-libs-browser/mock/net',
+  os: 'os-browserify/browser',
+  path: 'path-browserify',
+  querystring: 'querystring-es3',
+  stream: 'stream-browserify',
+  _stream_duplex: 'readable-stream/duplex',
+  _stream_passthrough: 'readable-stream/passthrough',
+  _stream_readable: 'readable-stream/readable',
+  _stream_transform: 'readable-stream/transform',
+  _stream_writable: 'readable-stream/writable',
+  sys: 'util',
+  timers: 'timers-browserify',
+  tls: 'node-libs-browser/mock/tls',
+  tty: 'tty-browserify',
+  vm: 'vm-browserify',
+  zlib: 'browserify-zlib'
 }
 
 const throwNewError = function (t, message) {
   return t.throwStatement(
     t.newExpression(t.identifier('Error'), [t.stringLiteral(message)])
-  );
+  )
 }
 
-const pushGlobalAssign = function(t, nodePath, globalName) {
+const pushGlobalAssign = function (t, nodePath, globalName) {
   nodePath.pushContainer('body', t.expressionStatement(
     t.assignmentExpression('=',
       t.memberExpression(
@@ -44,65 +44,63 @@ const pushGlobalAssign = function(t, nodePath, globalName) {
       ),
       t.identifier(globalName)
     )
-  ));
+  ))
 }
 
-module.exports = function(babel) {
+module.exports = function (babel) {
   return {
     visitor: {
-      Program: function Program(path, state) {
-          pushGlobalAssign(babel.types, path, 'Buffer')
-          pushGlobalAssign(babel.types, path, 'process')
-      }
+      Program: function Program (path, state) {
+        pushGlobalAssign(babel.types, path, 'Buffer')
+        pushGlobalAssign(babel.types, path, 'process')
+      },
 
-      ImportDeclaration: function(nodePath, state) {
-        const node = nodePath.node;
-        const arg = node.source;
+      ImportDeclaration: function (nodePath, state) {
+        const node = nodePath.node
+        const arg = node.source
 
         if (!arg || arg.type !== 'StringLiteral') {
-          return;
+          return
         }
 
-        const t = babel.types;
+        const t = babel.types
 
         if (aliases && arg.value in aliases) {
-          const replacement = aliases[arg.value];
+          const replacement = aliases[arg.value]
           nodePath.replaceWith(
             t.importDeclaration(node.specifiers, t.stringLiteral(replacement))
-          );
+          )
         }
       },
 
-      CallExpression: function(nodePath, state) {
-        const node = nodePath.node;
-        const callee = node.callee;
-        const arg = node.arguments[0];
+      CallExpression: function (nodePath, state) {
+        const node = nodePath.node
+        const callee = node.callee
+        const arg = node.arguments[0]
 
         if (callee.type !== 'Identifier' || callee.name !== 'require' || !arg) {
-          return;
+          return
         }
 
-        const t = babel.types;
-        const opts = state.opts;
+        const t = babel.types
+        const opts = state.opts
 
         // If the require() argument is not a string literal, replace the
         // require() call with an exception being thrown.
         if (arg.type !== 'StringLiteral') {
           if (opts.throwForNonStringLiteral) {
-            const code = nodePath.hub.file.code.slice(arg.start, arg.end);
-            nodePath.replaceWith(throwNewError(t, 'Invalid require: ' + code));
+            const code = nodePath.hub.file.code.slice(arg.start, arg.end)
+            nodePath.replaceWith(throwNewError(t, 'Invalid require: ' + code))
           }
-          return;
+          return
         }
 
         // If the require() argument is in the alias map, simply
         // rewrite the argument accordingly.
         if (aliases && arg.value in aliases) {
-          const replacement = aliases[arg.value];
-          nodePath.replaceWith(
-            t.callExpression(callee, [t.stringLiteral(replacement)])
-          );
-          return;
+          const replacement = aliases[arg.value]
+          nodePath.replaceWith(t.callExpression(callee, [t.stringLiteral(replacement)]))
+          return
         }
 
         // If the require() argument is a module that's blacklisted as
@@ -112,11 +110,10 @@ module.exports = function(babel) {
         // blacklist every affected module rather than being the default.
         if (opts.throwForModules &&
             opts.throwForModules.length &&
-            opts.throwForModules.indexOf(arg.value) !== -1) {
-          nodePath.replaceWith(
-            throwNewError(t, 'Could not resolve: ' + arg.value)
-          );
-          return;
+            opts.throwForModules.indexOf(arg.value) !== -1
+        ) {
+          nodePath.replaceWith(throwNewError(t, 'Could not resolve: ' + arg.value))
+          return
         }
 
         // If the require() argument points to a missing file whitelisted
@@ -127,21 +124,19 @@ module.exports = function(babel) {
         if (opts.throwForMissingFiles &&
             opts.throwForMissingFiles.length &&
             arg.value.startsWith('.') &&
-            state.file.opts.filename) {
+            state.file.opts.filename
+        ) {
           const absPath = path.resolve(
             path.dirname(state.file.opts.filename),
             arg.value
-          );
-          if (opts.throwForMissingFiles.indexOf(absPath) !== -1 &&
-              !fs.existsSync(absPath)) {
+          )
+          if (opts.throwForMissingFiles.indexOf(absPath) !== -1 && !fs.existsSync(absPath)) {
             nodePath.replaceWith(
               throwNewError(t, 'Could not resolve: ' + arg.value)
-            );
-            return;
+            )
           }
         }
-
-      },
-    },
-  };
-};
+      }
+    }
+  }
+}

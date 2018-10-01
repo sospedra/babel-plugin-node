@@ -29,6 +29,8 @@ const aliases = {
   zlib: 'browserify-zlib'
 }
 
+const rootPath = process.cwd()
+
 const throwNewError = function (t, message) {
   return t.throwStatement(
     t.newExpression(t.identifier('Error'), [t.stringLiteral(message)])
@@ -51,8 +53,16 @@ module.exports = function (babel) {
   return {
     visitor: {
       Program: function Program (path, state) {
-        pushGlobalAssign(babel.types, path, 'Buffer')
-        pushGlobalAssign(babel.types, path, 'process')
+        switch (state.file.opts.filename) {
+          case rootPath + '/node_modules/buffer/index.js': {
+            pushGlobalAssign(babel.types, path, 'Buffer')
+            break
+          }
+          case rootPath + '/node_modules/process/browser.js': {
+            pushGlobalAssign(babel.types, path, 'process')
+            break
+          }
+        }
       },
 
       ImportDeclaration: function (nodePath, state) {

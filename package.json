@@ -1,6 +1,6 @@
 {
   "name": "babel-plugin-node",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Babel plugin for node",
   "repository": "https://github.com/sospedra/babel-plugin-node",
   "license": "MIT",
